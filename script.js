@@ -31,22 +31,40 @@ function collision(x, y, checkLink = false){
           //CONSIDER BAKING THE COLLISION BOUNDS -> blazingly fast
           //when the window size or aspect ratio is changed it would have to be done again, still worth it probably
           //or binary search oder so verwenden. vielleicht sogar noch besser, weil man ja mit der enfernung eine art heuristic hat, wo der character sein könnte.
-          for(let i = 0; i <text.length; i++){
-            const range = document.createRange();
-            range.setStart(node, i);
-            range.setEnd(node, i+1);
-            var rect = range.getBoundingClientRect()
-            if(x>rect.left && x<rect.right && y<rect.bottom && y>rect.top){
-              if(checkLink){
-                if( element.tagName === 'A'){
-                  return [rect,element]
+          let low = 0;
+          let high = text.length - 1;
+          let count = 0
+          while (low <= high) {
+            count += 1;
+            const mid = (low + high) >> 1; // Bitwise right shift to find the middle index
 
+            const range = document.createRange();
+            range.setStart(node, mid);
+            range.setEnd(node, mid + 1);
+            const rect = range.getBoundingClientRect();
+            const rectTop = rect.top;
+            const rectLeft = rect.left;
+            const rectBottom = rect.bottom;
+            const rectRight = rect.right;
+
+            const isIndexHigh = (y < rectTop) || ((x < rectLeft) & (y < rectBottom));
+            const isIndexLow = (y > rectBottom) || ((x > rectRight) & (y > rectTop));
+
+            if (!isIndexHigh && !isIndexLow) {
+              if (checkLink) {
+                if (element.tagName === 'A') {
+                  return [rect, element];
                 }
-                return [rect,false]
+                return [rect, false];
               }
-              return rect
+              return rect;
+            } else if (isIndexHigh) {
+              high = mid - 1;
+            } else {
+              low = mid + 1;
             }
           }
+
           
         }
       }
@@ -148,7 +166,8 @@ animate();
 
 function fetchWikiExtract(page){
     $.getJSON(
-      "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+encodeURIComponent(page)+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*",
+      
+      "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+page+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*",
       function(data) {
         x = window.innerWidth / 2;
         y = 0
