@@ -1,8 +1,8 @@
 
-// Set initial position and speed of the ball
+// Set initial position and speed of the player
 var x = window.innerWidth / 2;
 var y = 0
-var speed = 6; // Speed of the ball
+var speed = 6; // Speed of the player
 var w = 0
 var d =0
 var s = 0
@@ -14,33 +14,52 @@ var grounded = false
 
 
 
-function collision(x, y){
+
+function collision(x, y, checkLink = false){
  
 
   element = document.elementFromPoint(x,y)
-  if (element instanceof HTMLIFrameElement){
-    _element = element.contentWindow.document.elementFromPoint(x, y);  //Not sure if you need to update x, y to account for being inside another dom.
-  }
+  if(element){
     
-  else if(element && element.childNodes[0]){
-    var text = element.childNodes[0].nodeValue
-    if(text && text.trim().length > 0){
-      // Highlight the street and city
-      for(let i = 0; i <text.length; i++){
-        const range = document.createRange();
-        range.setStart(element.childNodes[0], i);
-        range.setEnd(element.childNodes[0], i+1);
-        var rect = range.getBoundingClientRect()
-        if(x>rect.left && x<rect.right && y<rect.bottom && y>rect.top){
-          return rect
+    for(let j = 0; j<element.childNodes.length; j++){
+      node = element.childNodes[j]
+      if(node){
+        var text = node.nodeValue
+        if(text && text.trim().length > 0){
+          //THIS IS CRAP
+          //THIS CAN BE DONE WAY BETTER
+          //CONSIDER BAKING THE COLLISION BOUNDS -> blazingly fast
+          //when the window size or aspect ratio is changed it would have to be done again, still worth it probably
+          //or binary search oder so verwenden. vielleicht sogar noch besser, weil man ja mit der enfernung eine art heuristic hat, wo der character sein könnte.
+          for(let i = 0; i <text.length; i++){
+            const range = document.createRange();
+            range.setStart(node, i);
+            range.setEnd(node, i+1);
+            var rect = range.getBoundingClientRect()
+            if(x>rect.left && x<rect.right && y<rect.bottom && y>rect.top){
+              if(checkLink){
+                if( element.tagName === 'A'){
+                  return [rect,element]
+
+                }
+                return [rect,false]
+              }
+              return rect
+            }
+          }
+          
         }
       }
       
     }
   }
+  if(checkLink){
+    
+    return[false,false]
+  }
   return false
 }
-// Function to update the ball's position based on key input
+// Function to update the player's position based on key input
 function moveBall(event) {
   // Move left (A key)
   if (event.keyCode === 65) {
@@ -63,7 +82,7 @@ function moveBall(event) {
   }
 }
 
-// Function to stop the ball's movement when keys are released
+// Function to stop the player's movement when keys are released
 function stopBall(event) {
     // Move left (A key)
     if (event.keyCode === 65) {
@@ -76,32 +95,48 @@ function stopBall(event) {
   }
 
 // Add event listeners for keydown and keyup events
-document.addEventListener("keydown", moveBall);
-document.addEventListener("keyup", stopBall);
+$(document).on("keydown", moveBall);
+$(document).on("keyup", stopBall);
 // onmousemove = function(e){x=e.clientX
 // y= e.clientY}
-// Function to continuously update and redraw the ball
+// Function to continuously update and redraw the player
 function animate() {
   
     vy += 0.1
     vx = Math.min(Math.max(vx + (d-a - 0.2*vx),-speed),speed)
-  // // Update ball position
-    x += vx
-    y += vy
+  // // Update player position
+    x += vx;
+    y += vy;
     
-    ball.style.left = x + "px";
-    ball.style.top = y + "px";
-    ball.style.backgroundColor = "blue";
-    rect = collision(x+20,y+40)
+    
+    $("#player").css({
+      left: x + "px",
+      top: (window.innerHeight/2) + "px",
+      backgroundColor: "blue",
+    });
+    $('#wiki-wrapper').css({
+      top: -y+(window.innerHeight/2) + "px"
+    }); 
+    
+    [rect, link] = collision(x+20,40+(window.innerHeight/2), true)
+    if(link){
+      linkText = link.getAttribute('href')
+      if(linkText.startsWith("/wiki/")){
+        $("#page").empty()
+        fetchWikiExtract(linkText.slice(6))
+      }
+    }
     if(rect){
       grounded = true
-      ball.style.backgroundColor = "red";
-      y= rect.top-40
+      player.style.backgroundColor = "red";
+      y -= ((window.innerHeight/2)+40)-rect.top
       vy = 0
     }
     else{
       grounded = false
-    }    
+    }   
+
+    
     
   
     requestAnimationFrame(animate);
@@ -109,3 +144,26 @@ function animate() {
 
 // Start the animation
 animate();
+
+
+function fetchWikiExtract(page){
+    $.getJSON(
+      "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+encodeURIComponent(page)+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*",
+      function(data) {
+        x = window.innerWidth / 2;
+        y = 0
+        console.log(data.parse.text["*"])
+        // Extract the HTML content from the response
+      var htmlContent = data.parse.text["*"].replaceAll('src="//','src="https://');
+
+      // Find the target element on your page where you want to insert the content
+      var $targetElement = $("#page");
+
+      // Set the retrieved HTML as the content of the target element
+      $targetElement.html(htmlContent);
+      }
+      
+    );
+}
+
+fetchWikiExtract("Platform game");
