@@ -1,10 +1,8 @@
 #player {
     margin: 0;
     position: relative;
-    width: 40px;
-    height: 40px;
-    background-color: blue;
-    border-radius: 50%;
+    width: 30px;
+    height: 30px;
     z-index: 5000;
 }
 #test {
@@ -15,13 +13,25 @@
 #testDiv {
     width:1000px
 }
+#playerSprite {
+    width: 100%;
+}
 #wiki-wrapper {
     position: relative;
+}
+#line {
+    margin: 0;
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    z-index: 5000;
+    background-color: black;
 }
 h1 {
     margin: 60px
 }
 body {
+    user-select: none;
     padding: 0;
     margin: 0;
     height: 100%;
