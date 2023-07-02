@@ -2,7 +2,7 @@
 // Set initial position and speed of the player
 var x = window.innerWidth / 2;
 var y = -0
-var speed = 0.4; // Speed of the player
+var speed = 0.24; // Speed of the player
 var lockVel = false;
 
 //keysPressed
@@ -125,10 +125,11 @@ function moveBall(event) {
 
   // Move left (A key)
   if (event.keyCode === 65) {
-    a = speed;
+    a = 1;
   }
   // Move up (W key)
   else if (event.keyCode === 87) {
+    //jump
     if(grounded){
       frame = 0
       vy = -0.5;
@@ -137,11 +138,11 @@ function moveBall(event) {
   }
   // Move right (D key)
   else if (event.keyCode === 68) {
-    d = speed;
+    d = 1;
   }
   // Move down (S key)
   else if (event.keyCode === 83) {
-    s = speed;
+    s = 1;
   }
   else if (event.keyCode === 16) {
     shift = true
@@ -255,55 +256,67 @@ function grappleLine(){
     
   })
 }
+function move(elapsedSinceLastLoop){
+  vy += 0.001*elapsedSinceLastLoop;
+    if(!lockVel && !grapple && (grounded || controlled || (d-a !== 0)) ){
+      controlled= true
+      if(d-a === 0){
+        vx *= Math.pow(0.9,elapsedSinceLastLoop);
+      }
+      else{
+        nvx = (d-a)*speed;
+      if(vx/nvx<1){
+        vx = nvx
+      }
+      }
+      
+      //vx = Math.min(Math.max(vx + (d-a - 0.2*vx),-speed),speed);
+    }
+    else if(d-a!==0  && grapple && !lockVel){
+      if(vx/((d-a)*speed) <1){
+        vx+= (d-a)*speed*elapsedSinceLastLoop*0.001
+      }
+      //vx *= Math.pow(0.9,elapsedSinceLastLoop);
+    }
+    
+}
+function grapplePhy(elapsedSinceLastLoop) {
+  if(grapple){
+    controlled= false;
+    diffX = grappleX-x;
+    diffY= grappleY-y
+    norm = Math.sqrt(diffX*diffX + diffY * diffY);
+    diffX = diffX/norm;
+    diffY = diffY/norm;
+
+    nx = x + dx;
+    ny = y + dy;
+
+    diffnX = grappleX-nx;
+    diffnY= grappleY-ny
+    nnorm = Math.sqrt(diffnX*diffnX + diffnY * diffnY);
+
+    delta = norm-nnorm;
+    if(delta < 0.05*elapsedSinceLastLoop){
+      vx += diffX*elapsedSinceLastLoop*0.01
+      vy += diffY*elapsedSinceLastLoop*0.01
+    }
+  }
+}
 
 controlled = true;
 function update(currentTime) {
-  
-  
-  
-  
   if(!lastTime){lastTime=currentTime; requestAnimationFrame(update); return;}
   elapsedSinceLastLoop=(currentTime-lastTime);
   
-    vy += 0.001*elapsedSinceLastLoop;
-    if(!lockVel && !grapple &&(grounded || d-a !== 0 || controlled) ){
-      controlled = true
-      vx = Math.min(Math.max(vx + (d-a - 0.2*vx),-speed),speed);
-    }
-    else if(d-a!==0 && grounded && grapple && !lockVel){
-      if(vx/(d-a) <1){
-        vx+= (d-a)*elapsedSinceLastLoop*0.014
-      }
-      vx *= Math.pow(0.9,elapsedSinceLastLoop);
-    }
     
-    
+    move(elapsedSinceLastLoop)
   // // Update player position
     dx = vx*elapsedSinceLastLoop
     dy = vy*elapsedSinceLastLoop
     
-
-    if(grapple){
-      controlled= false;
-      diffX = grappleX-x;
-      diffY= grappleY-y
-      norm = Math.sqrt(diffX*diffX + diffY * diffY);
-      diffX = diffX/norm;
-      diffY = diffY/norm;
-  
-      nx = x + dx;
-      ny = y + dy;
-
-      diffnX = grappleX-nx;
-      diffnY= grappleY-ny
-      nnorm = Math.sqrt(diffnX*diffnX + diffnY * diffnY);
-
-      delta = norm-nnorm;
-      if(delta < 0.05*elapsedSinceLastLoop){
-        vx += diffX*elapsedSinceLastLoop*0.01
-        vy += diffY*elapsedSinceLastLoop*0.01
-      }
-    }
+    grapplePhy(elapsedSinceLastLoop)
+    
 
     dx = vx*elapsedSinceLastLoop
     dy = vy*elapsedSinceLastLoop
@@ -334,11 +347,11 @@ function update(currentTime) {
     }   
 
     $("#player").css({
-      left: x + "px",
-      top: (window.innerHeight/2) + "px",
+      transform: `translateY(${(window.innerHeight/2)}px) translateX(${x}px)`
     });
     $('#wiki-wrapper').css({
-      top: -y+(window.innerHeight/2) + "px"
+      transform: `translateY(${-y+(window.innerHeight/2)}px)`
+      // top: -y+(window.innerHeight/2) + "px"
     }); 
     
     lastTime=currentTime;
