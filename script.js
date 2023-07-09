@@ -20,12 +20,15 @@ let grappleY=0;
 let grapple = false;
 
 
-const playerHeight = 30;
-const playerWidth = 30;
+const playerHeight = 40;
+const playerWidth = 40;
 var grounded = false
 const runloop= [0,1,2,3]
 const jumploop= [4,5,6,7,8,9,10]
 var preloadedImages = [];
+
+
+var inGame = false;
 
 
 // Function to preload images
@@ -306,6 +309,9 @@ function grapplePhy(elapsedSinceLastLoop) {
 
 controlled = true;
 function update(currentTime) {
+  if(!inGame){
+    return;
+  }
   if(!lastTime){lastTime=currentTime; requestAnimationFrame(update); return;}
   elapsedSinceLastLoop=(currentTime-lastTime);
   
@@ -320,7 +326,7 @@ function update(currentTime) {
 
     dx = vx*elapsedSinceLastLoop
     dy = vy*elapsedSinceLastLoop
-
+    
     x += dx;
     y += dy;
     
@@ -355,33 +361,49 @@ function update(currentTime) {
     }); 
     
     lastTime=currentTime;
-    animate()
-    grappleLine()
+    animate();
+    grappleLine();
     requestAnimationFrame(update);
 }
 
-// Start the animation
-update();
 
 
 function fetchWikiExtract(page){
     $.getJSON(
       
-      "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+page+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*",
+      getWikiURL(page),
       function(data) {
         y = -window.innerHeight/2
         console.log(data.parse.text["*"])
         // Extract the HTML content from the response
       var htmlContent = data.parse.text["*"].replaceAll('src="//','src="https://');
+      $('#currentText').text(data.parse.title)
 
       // Find the target element on your page where you want to insert the content
       var $targetElement = $("#page");
-
+      
       // Set the retrieved HTML as the content of the target element
       $targetElement.html(htmlContent);
       }
       
     );
 }
+function getWikiURL(page){
+  return "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+page+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*"
+}
 
-fetchWikiExtract("Platform game");
+function startGame(start, stop){
+  fetchWikiExtract(encodeURI(start));
+  $('#fromText').text(start);
+  $('#toText').text(stop);
+  inGame = true;
+  update();
+  $("#game").css({
+    display: `block`
+    // top: -y+(window.innerHeight/2) + "px"
+  }); 
+  $("#menu").css({
+    display: `none`
+    // top: -y+(window.innerHeight/2) + "px"
+  }); 
+}

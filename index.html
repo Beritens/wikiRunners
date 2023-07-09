@@ -3,6 +3,7 @@
 <head>
     <title>Bouncing Ball</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="menu.css">
     
     <link rel="stylesheet" type="text/css" href="7d0062659fb6bf0f.css">
     <script src="jquery-3.7.0.js"></script>
@@ -13,20 +14,50 @@
             left: 0;
         }
     </style>
+    <script src="autocomplete.js"></script>
 </head>
 <body>
+    <div id="menu">
+        <div>
+            <form autocomplete="off">
+            <div class="autocomplete" style="width:300px;">
+                <input id="startInput" type="text" name="Article" placeholder="Title">
+                <span id="startError" class="error-message"></span> <!-- Fehlermeldung für das Starteingabefeld -->
+            </div>
+            <div class="autocomplete" style="width:300px;">
+                <input id="stopInput" type="text" name="Article" placeholder="Title">
+                <span id="stopError" class="error-message"></span> <!-- Fehlermeldung für das Stopeingabefeld -->
+            </div>
+            <input type="submit">
+            </form>
+        </div>
+        <div id="checking">
+            <p >checking titles...</p>
+        </div>
+      </div>
     
-    <div id="player"><img id="playerSprite" src="./assets/Run anim/run0.png"></div>
-    <div id="line"></div>
-    <script src="script.js"></script>
-    
-    
+    <script src="menu.js"></script>
+    <div id="game">
+        <div id="player"><img id="playerSprite" src="./assets/Run anim/run0.png"></div>
+        <div id="bar">
+            <div class="container"><p class="title">from:</p><div class="text"><p id="fromText">some text</p></div></div>
+            <div class="container"><p class="title">to:</p><div class="text"><p id="toText">some text</p></div></div>
+            <div class="container"><p class="title">current:</p><div class="text"><p id="currentText">some text</p></div></div>
+        </div>
+        
+        
+        <div id="line"></div>
+        <script src="script.js"></script>
+        
+        
+        <div id="wiki-wrapper-wrapper">
+            <div id="wiki-wrapper" class="wiki-wrapper lang-en">
+                <content id="page" class="content">
 
-   <div id="wiki-wrapper" class="wiki-wrapper lang-en">
-        <content id="page" class="content">
-
-        </content>
-   </div> 
+                </content>
+            </div> 
+        </div>
+    </div>
     
 </body>
 </html>
