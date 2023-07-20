@@ -21,7 +21,7 @@
     transform: translateY(100px);
 }
 #wiki-wrapper-wrapper {
-    overflow: hidden;
+    padding: 20px;
 }
 #line {
     margin: 0;
@@ -42,7 +42,7 @@ body {
     padding: 0;
     margin: 0;
     height: 100%;
-    overflow: hidden;
+    overflow: clip;
     
 }
 html, body {
@@ -51,10 +51,12 @@ html, body {
 }
 
 #bar {
+    position: sticky;
     background-color: #f2f2f2;
     display: flex;
     justify-content: space-between;
     padding: 10px;
+    z-index: 1000;
   }
   
   .container {

@@ -20,21 +20,27 @@
     <div id="menu">
         <div>
             <form autocomplete="off">
-            <div class="autocomplete" style="width:300px;">
-                <input id="startInput" type="text" name="Article" placeholder="Title">
-                <span id="startError" class="error-message"></span> <!-- Fehlermeldung für das Starteingabefeld -->
-            </div>
-            <div class="autocomplete" style="width:300px;">
-                <input id="stopInput" type="text" name="Article" placeholder="Title">
-                <span id="stopError" class="error-message"></span> <!-- Fehlermeldung für das Stopeingabefeld -->
-            </div>
-            <input type="submit">
+                <div class="autocomplete" style="width:300px;">
+                    <div class="input-container">
+                        <input id="startInput" type="text" name="Article" placeholder="Title">
+                        <button type="button" class="dice-button" onclick="rollDice('startInput')">&#9856;</button>
+                    </div>
+                    <span id="startError" class="error-message"></span> <!-- Fehlermeldung für das Starteingabefeld -->
+                </div>
+                <div class="autocomplete" style="width:300px;">
+                    <div class="input-container">
+                        <input id="stopInput" type="text" name="Article" placeholder="Title">
+                        <button type="button" class="dice-button" onclick="rollDice('stopInput')">&#9856;</button>
+                    </div>
+                    <span id="stopError" class="error-message"></span> <!-- Fehlermeldung für das Stopeingabefeld -->
+                </div>
+                <input type="submit">
             </form>
         </div>
         <div id="checking">
-            <p >checking titles...</p>
+            <p>checking titles...</p>
         </div>
-      </div>
+    </div>
     
     <script src="menu.js"></script>
     <div id="game">
@@ -48,10 +54,13 @@
         
         <div id="line"></div>
         <script src="script.js"></script>
+        <script src="WikiAPI.js"></script>
+        <script src="coolShit.js"></script>
         
         
         <div id="wiki-wrapper-wrapper">
             <div id="wiki-wrapper" class="wiki-wrapper lang-en">
+                <h1 id="pageTitle">Title</h1>
                 <content id="page" class="content">
 
                 </content>

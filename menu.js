@@ -58,5 +58,18 @@ async function testPage(page) {
   }
 }
 
+function rollDice(inputId) {
+  // Get the input element by ID
+  var inputElement = document.getElementById(inputId);
+
+  // Generate a random number between 1 and 6 (representing dice faces)
+  $.get("https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*", function(data){
+    inputElement.value = data.query.random[0].title;
+  })
+
+  // Append the random number to the input value
+  
+}
+
 // Attach the event listener to the submit button
 form.addEventListener('submit', formSubmitted);

@@ -8,9 +8,9 @@ var lockVel = false;
 //keysPressed
 var w = 0;
 var d =0;
-var s = 0;
 var a = 0;
 var shift = false;
+var dig = false;
 
 vx = 0;
 vy = 0;
@@ -25,11 +25,25 @@ const playerWidth = 40;
 var grounded = false
 const runloop= [0,1,2,3]
 const jumploop= [4,5,6,7,8,9,10]
+const slideFrame = "./assets/Run anim/run0.png"
 var preloadedImages = [];
 
 
 var inGame = false;
 
+let $playerSprite;
+let $line;
+let $wikiWrapper;
+let $player;
+let $page;
+
+$( document ).ready(function() {
+  $playerSprite = $("#playerSprite");
+  $line = $("#line");
+  $wikiWrapper = $('#wiki-wrapper');
+  $player = $("#player");
+  $page = $("#page");
+});
 
 // Function to preload images
 function preloadImages(imagePaths) {
@@ -59,8 +73,19 @@ var imagePaths = [
 preloadImages(imagePaths);
 
 
+//x doesn't really matter screenPosition = worldPosition
+function screenToWorldY(sy){
+  return y-(window.innerHeight/2) + sy;
+}
 
-function collision(x, y, checkLink = false){
+function woroldToScreenY(wy){
+  return wy-y+window.innerHeight/2
+
+}
+
+
+//uses screen position
+function collision(x, y, player = false){
  
 
   elements = document.elementsFromPoint(x,y)
@@ -71,7 +96,6 @@ function collision(x, y, checkLink = false){
       for(let j = 0; j<element.childNodes.length; j++){
         node = element.childNodes[j]
         if(node){
-          
           var text = node.nodeValue
           if(text && text.trim().length > 0){
             //using bitwise search to get the correct character
@@ -95,11 +119,14 @@ function collision(x, y, checkLink = false){
               const isIndexLow = (y > rectBottom) || ((x > rectRight) & (y > rectTop));
   
               if (!isIndexHigh && !isIndexLow) {
-                if (checkLink) {
-                  if (element.tagName === 'A') {
-                    return [rect, element];
+                if (player) {
+                  if(text.charAt(mid) == "\u2002" ){
+                    return [false,false, null, 0];
                   }
-                  return [rect, false];
+                  else if (element.tagName === 'A') {
+                    return [rect, element, node, mid];
+                  }
+                  return [rect, false, node, mid];
                 }
                 return rect;
               } else if (isIndexHigh) {
@@ -117,14 +144,14 @@ function collision(x, y, checkLink = false){
     }
   }
   
-  if(checkLink){
+  if(player){
     
-    return[false,false]
+    return[false,false, null, 0]
   }
   return false
 }
 // Function to update the player's position based on key input
-function moveBall(event) {
+function keyDown(event) {
 
   // Move left (A key)
   if (event.keyCode === 65) {
@@ -143,17 +170,16 @@ function moveBall(event) {
   else if (event.keyCode === 68) {
     d = 1;
   }
-  // Move down (S key)
-  else if (event.keyCode === 83) {
-    s = 1;
-  }
   else if (event.keyCode === 16) {
     shift = true
+  }
+  else if (event.keyCode === 83) {
+    dig = true
   }
 }
 
 // Function to stop the player's movement when keys are released
-function stopBall(event) {
+function keyUp(event) {
     // Move left (A key)
     if (event.keyCode === 65) {
       a = 0;
@@ -166,18 +192,21 @@ function stopBall(event) {
       shift = false
       lockVel=false
     }
+    else if (event.keyCode === 83) {
+      dig = false
+    }
   }
 
 // Add event listeners for keydown and keyup events
-$(document).on("keydown", moveBall);
-$(document).on("keyup", stopBall);
+$(document).on("keydown", keyDown);
+$(document).on("keyup", keyUp);
 var lastTime;
 var elapsedSinceLastLoop;
 onmousedown = function(e){
   if(collision(e.clientX ,e.clientY)){
     grapple = true
     grappleX=e.clientX 
-    grappleY= y-(window.innerHeight/2) + e.clientY
+    grappleY= screenToWorldY(e.clientY)
   }
   else{
     for(let i = 1; i < 60; i++){
@@ -186,7 +215,7 @@ onmousedown = function(e){
       if(collision(e.clientX+ fx*i*5 ,e.clientY+ fy * i* 5)){
         grapple = true;
         grappleX=e.clientX + fx*i*1;
-        grappleY= y-(window.innerHeight/2) + e.clientY + fy * i* 5;
+        grappleY= screenToWorldY(e.clientY)+ fy * i* 5;
         return;
       }
     }
@@ -197,7 +226,18 @@ onmousedown = function(e){
   }
 // Function to continuously update and redraw the player
 let frame = 0;
+function turn(){
+  if(vx !== 0){
+    $playerSprite.css({
+      transform: `scaleX(${Math.sign(vx)})`
+    })
+  }
+}
 function animate(){
+  if(lockVel){
+    $playerSprite.attr("src",slideFrame);
+    return;
+  }
   if(grounded){
     if(vx*vx > 0.0001){
       frame = (frame + elapsedSinceLastLoop*0.02) % 4;
@@ -211,12 +251,8 @@ function animate(){
     frame = (frame + elapsedSinceLastLoop*0.01);
     animImg = `./assets/Run anim/run${jumploop[Math.min(Math.floor(frame),5)]}.png`;
   }
-  $("#playerSprite").attr("src",animImg);
-  if(vx !== 0){
-    $("#playerSprite").css({
-      transform: `scaleX(${Math.sign(vx)})`
-    })
-  }
+  $playerSprite.attr("src",animImg);
+  
 }
 function shiftSpeed(){
   if(shift && grounded && !lockVel && (-a+d)!==0){
@@ -232,7 +268,7 @@ function shiftTurn(){
 }
 function grappleLine(){
   if(!grapple){
-    $("#line").css({
+    $line.css({
     
       visibility: "hidden"
       
@@ -240,7 +276,7 @@ function grappleLine(){
     })
     return;
   }
-  disY = grappleY-y+window.innerHeight/2
+  disY =  woroldToScreenY(grappleY)
  
   middleY = (disY + window.innerHeight/2+playerHeight/2)/2
 
@@ -249,7 +285,7 @@ function grappleLine(){
   ang = Math.atan(dirY/dirX);
   norm = Math.sqrt(dirX*dirX + dirY*dirY);
   posX = ((x+playerWidth/2 + grappleX)/2)-norm/2
-  $("#line").css({
+  $line.css({
     
     transform: `rotate(${-ang}rad)`,
     left: posX + "px",
@@ -306,6 +342,15 @@ function grapplePhy(elapsedSinceLastLoop) {
     }
   }
 }
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+function loopAround () {
+
+  x = mod(x,window.innerWidth);
+  y = mod((y+window.innerHeight),($wikiWrapper.height() + window.innerHeight*2 ))- window.innerHeight;
+}
 
 controlled = true;
 function update(currentTime) {
@@ -333,64 +378,50 @@ function update(currentTime) {
     
     
     
-    [rect, link] = collision(x+playerWidth/2,playerHeight+(window.innerHeight/2)+dy, true)
-    if(link && !shift){
-      linkText = link.getAttribute('href');
-      if(linkText.startsWith("/wiki/")){
-        $("#page").empty();
-        fetchWikiExtract(linkText.slice(6));
-      }
-    }
+    [rect, link, node, chIndex] = collision(x+playerWidth/2,playerHeight+(window.innerHeight/2)+dy, true)
+
+    
     if(rect){
-      grounded = true;
-      y -= (playerHeight+(window.innerHeight/2)+dy)-rect.top;
-      shiftSpeed();
-      vy = 0;
+      if(node && dig){
+        impact(node,chIndex, Math.max(1,Math.min(vy*10,8)));
+        vy = vy*0.8;
+        
+      }
+      else if(link && !shift){
+        linkText = link.getAttribute('href');
+        if(linkText.startsWith("/wiki/")){
+          $page.empty();
+          fetchWikiExtract(linkText.slice(6));
+        }
+      }
+      else{
+        grounded = true;
+        y -= (playerHeight+(window.innerHeight/2)+dy)-rect.top;
+        shiftSpeed();
+        vy = 0;
+      }
     }
     else{
       shiftTurn();
       grounded = false;
     }   
 
-    $("#player").css({
+    $player.css({
       transform: `translateY(${(window.innerHeight/2)}px) translateX(${x}px)`
     });
-    $('#wiki-wrapper').css({
-      transform: `translateY(${-y+(window.innerHeight/2)}px)`
-      // top: -y+(window.innerHeight/2) + "px"
-    }); 
+    $wikiWrapper[0].style.transform = `translateY(${-y+(window.innerHeight/2)}px)`; 
     
     lastTime=currentTime;
     animate();
+    turn();
     grappleLine();
+    loopAround()
     requestAnimationFrame(update);
 }
 
 
 
-function fetchWikiExtract(page){
-    $.getJSON(
-      
-      getWikiURL(page),
-      function(data) {
-        y = -window.innerHeight/2
-        console.log(data.parse.text["*"])
-        // Extract the HTML content from the response
-      var htmlContent = data.parse.text["*"].replaceAll('src="//','src="https://');
-      $('#currentText').text(data.parse.title)
 
-      // Find the target element on your page where you want to insert the content
-      var $targetElement = $("#page");
-      
-      // Set the retrieved HTML as the content of the target element
-      $targetElement.html(htmlContent);
-      }
-      
-    );
-}
-function getWikiURL(page){
-  return "https://en.wikipedia.org/w/api.php?action=parse&prop=text&page="+page+"&format=json&disableeditsection=1&redirects=true&useskin=minerva&origin=*"
-}
 
 function startGame(start, stop){
   fetchWikiExtract(encodeURI(start));
