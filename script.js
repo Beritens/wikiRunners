@@ -25,17 +25,22 @@ const playerWidth = 40;
 var grounded = false
 const runloop= [0,1,2,3]
 const jumploop= [4,5,6,7,8,9,10]
-const slideFrame = "./assets/Run anim/run0.png"
+const slideFrame = "./assets/slide.png"
 var preloadedImages = [];
 
 
 var inGame = false;
+var startTime = Date.now()
+var timeRunning = true;
 
 let $playerSprite;
 let $line;
 let $wikiWrapper;
 let $player;
 let $page;
+let $time;
+
+let goal = '';
 
 $( document ).ready(function() {
   $playerSprite = $("#playerSprite");
@@ -43,6 +48,7 @@ $( document ).ready(function() {
   $wikiWrapper = $('#wiki-wrapper');
   $player = $("#player");
   $page = $("#page");
+  $time = $("#time");
 });
 
 // Function to preload images
@@ -67,7 +73,7 @@ var imagePaths = [
   './assets/Run anim/run10.png',
   './assets/Run anim/run11.png',
   './assets/Run anim/run12.png',
-  './assets/Run anim/run13.png'
+  './assets/Run anim/run13.png',
   // Add more image paths if needed
 ];
 preloadImages(imagePaths);
@@ -150,52 +156,51 @@ function collision(x, y, player = false){
   }
   return false
 }
-// Function to update the player's position based on key input
-function keyDown(event) {
 
-  // Move left (A key)
-  if (event.keyCode === 65) {
-    a = 1;
-  }
-  // Move up (W key)
-  else if (event.keyCode === 87) {
-    //jump
-    if(grounded){
-      frame = 0
-      vy = -0.5;
-    }
-    
-  }
-  // Move right (D key)
-  else if (event.keyCode === 68) {
-    d = 1;
-  }
-  else if (event.keyCode === 16) {
-    shift = true
-  }
-  else if (event.keyCode === 83) {
-    dig = true
+function keyDown(event) {
+  switch (event.keyCode) {
+    case 65: // A key
+      a = 1;
+      break;
+    case 87: // W key
+      if (grounded) {
+        frame = 0;
+        vy = -0.5;
+      }
+      break;
+    case 68: // D key
+      d = 1;
+      break;
+    case 16: // Shift key
+      shift = true;
+      break;
+    case 83: // S key
+      dig = true;
+      break;
+    case 82: // R key
+      console.log('test');
+      fetchWikiExtract(currentPage);
+      break;
   }
 }
 
-// Function to stop the player's movement when keys are released
 function keyUp(event) {
-    // Move left (A key)
-    if (event.keyCode === 65) {
+  switch (event.keyCode) {
+    case 65: // A key
       a = 0;
-    }
-    // Move right (D key)
-    else if (event.keyCode === 68) {
+      break;
+    case 68: // D key
       d = 0;
-    }
-    else if (event.keyCode === 16) {
-      shift = false
-      lockVel=false
-    }
-    else if (event.keyCode === 83) {
-      dig = false
-    }
+      break;
+    case 16: // Shift key
+      shift = false;
+      lockVel = false;
+      break;
+    case 83: // S key
+      dig = false;
+      break;
   }
+}
 
 // Add event listeners for keydown and keyup events
 $(document).on("keydown", keyDown);
@@ -357,6 +362,7 @@ function update(currentTime) {
   if(!inGame){
     return;
   }
+  updateTime();
   if(!lastTime){lastTime=currentTime; requestAnimationFrame(update); return;}
   elapsedSinceLastLoop=(currentTime-lastTime);
   
@@ -419,11 +425,19 @@ function update(currentTime) {
     requestAnimationFrame(update);
 }
 
-
+function updateTime(){
+  if(timeRunning){
+    $time.text(Date.now() - startTime);
+  }
+  
+}
 
 
 
 function startGame(start, stop){
+  startTime = Date.now();
+  timeRunning = true;
+  goal = stop;
   fetchWikiExtract(encodeURI(start));
   $('#fromText').text(start);
   $('#toText').text(stop);
@@ -437,4 +451,8 @@ function startGame(start, stop){
     display: `none`
     // top: -y+(window.innerHeight/2) + "px"
   }); 
+}
+function endGame(){
+  updateTime();
+  timeRunnin = false;
 }

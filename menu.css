@@ -26,7 +26,6 @@ body {
   /*the container must be positioned relative:*/
   position: relative;
   display: inline-block;
-  width: 
 }
 input {
   border: 1px solid transparent;
@@ -135,10 +134,9 @@ input[type=submit] {
     height:100%;
     text-align: center;
   }
-  #menu > *{
+  #form{
     display: flex;
     justify-content: center; /* Centers content horizontally */
-    height: 50%;
     align-items: end;
   }
   #checking{

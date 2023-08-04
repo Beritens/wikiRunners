@@ -1,3 +1,4 @@
+let currentPage = "";
 function rollDice(inputId) {
   // Get the input element by ID
   var inputElement = document.getElementById(inputId);
@@ -10,6 +11,7 @@ function rollDice(inputId) {
   // Append the random number to the input value
   
 }
+//and load it [yeah was too lazy too put it in an extra function]
 function fetchWikiExtract(page){
   y = -window.innerHeight/2;
   vx = 0;
@@ -22,8 +24,18 @@ function fetchWikiExtract(page){
       console.log(data.parse.text["*"])
       // Extract the HTML content from the response
     var htmlContent = data.parse.text["*"].replaceAll('src="//','src="https://');
+    var title = ''
+    console.log(goal, data.parse.title)
+    if(data.parse.title === goal){
+      endGame()
+      title = "yeah, you did it!"
+    }
+    else{
+      title = data.parse.title;
+    }
     $('#currentText').text(data.parse.title)
-    $('#pageTitle').text(data.parse.title)
+    currentPage = page;
+    $('#pageTitle').text(title)
 
     // Find the target element on your page where you want to insert the content
     var $targetElement = $("#page");
